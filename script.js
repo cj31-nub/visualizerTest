@@ -4,6 +4,7 @@ import { ARButton } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js
 
 let camera, scene, renderer;
 let controller;
+let model;
 
 init();
 
@@ -20,25 +21,33 @@ function init() {
   renderer.xr.enabled = true;
   container.appendChild(renderer.domElement);
 
-  document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
-
+  Cargar modelo
   const loader = new GLTFLoader();
   loader.load('https://cj31-nub.github.io/visualizerTest/A189-015-A.glb', function (gltf) {
-    const model = gltf.scene;
+    model = gltf.scene;
     model.scale.set(1, 1, 1); // Ajusta la escala si es necesario
     model.visible = false;
     scene.add(model);
+  });
 
-    controller = renderer.xr.getController(0);
-    controller.addEventListener('select', () => {
+  // Controlador para colocar el modelo
+  controller = renderer.xr.getController(0);
+  controller.addEventListener('select', () => {
+    if (model) {
       model.position.setFromMatrixPosition(controller.matrixWorld);
       model.visible = true;
-    });
-    scene.add(controller);
+    }
+  });
+  scene.add(controller);
+
+  // Botón personalizado
+  document.getElementById('start-ar').addEventListener('click', async () => {
+    const sessionInit = { requiredFeatures: ['hit-test'] };
+    const session = await navigator.xr.requestSession('immersive-ar', sessionInit);
+    renderer.xr.setSession(session);
   });
 
   renderer.setAnimationLoop(() => {
     renderer.render(scene, camera);
   });
 }
-``
